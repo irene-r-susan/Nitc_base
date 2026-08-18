@@ -10,7 +10,7 @@ endif
 SUBDIR = FrontendInterface Frontend Algebra Schema BlockAccess BPlusTree Cache Buffer Disk_Class
 
 HEADERS = $(wildcard define/*.h $(foreach fd, $(SUBDIR), $(fd)/*.h))
-SRCS = $(wildcard stage2Q1.cpp $(foreach fd, $(SUBDIR), $(fd)/*.cpp))
+SRCS = $(wildcard stage3Q1.cpp $(foreach fd, $(SUBDIR), $(fd)/*.cpp))
 OBJS = $(addprefix $(BUILD_DIR)/, $(SRCS:cpp=o))
 
 $(TARGET): $(OBJS)
