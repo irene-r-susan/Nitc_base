@@ -1,5 +1,5 @@
 #include "RelCacheTable.h"
-
+#include<iostream>
 #include <cstring>
 
 RelCacheEntry* RelCacheTable::relCache[MAX_OPEN];
@@ -45,5 +45,40 @@ void RelCacheTable::recordToRelCatEntry(union Attribute record[RELCAT_NO_ATTRS],
   relCatEntry->firstBlk=(int)record[RELCAT_FIRST_BLOCK_INDEX].nVal;
   relCatEntry->lastBlk=(int)record[RELCAT_LAST_BLOCK_INDEX].nVal;
   relCatEntry->numSlotsPerBlk=(int)record[RELCAT_NO_SLOTS_PER_BLOCK_INDEX].nVal;
+}
+
+
+int RelCacheTable::getSearchIndex(int relId,RecId* searchIndex)
+{
+  if(relId>=0&&relId<MAX_OPEN)
+  {
+    if(relCache[relId]==nullptr)
+    return E_RELNOTOPEN;
+
+    *searchIndex=relCache[relId]->searchIndex;
+    return SUCCESS;
+  }
+  return E_OUTOFBOUND;
+}
+
+int RelCacheTable::setSearchIndex(int relId, RecId* searchIndex) 
+{
+    if(relId>=0&&relId<MAX_OPEN)
+  {
+    if(relCache[relId]==nullptr)
+    {
+    printf("Error: Relation is not open");
+    return E_RELNOTOPEN;
+    }
+   relCache[relId]->searchIndex=*searchIndex;
+    return SUCCESS;
+  }
+  return E_OUTOFBOUND;
+} 
+
+int RelCacheTable::resetSearchIndex(int relId) {
+  // use setSearchIndex to set the search index to {-1, -1}
+  RecId searchIndex = {-1, -1};
+  return setSearchIndex(relId, &searchIndex);
 }
 

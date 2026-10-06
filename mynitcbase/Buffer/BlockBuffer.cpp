@@ -3,9 +3,6 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "BlockBuffer.h"
-#include <cstring>
-
 // Initialize blockNum member variable
 BlockBuffer::BlockBuffer(int blockNum) {
   this->blockNum = blockNum;
@@ -111,30 +108,85 @@ int RecBuffer::setRecord(union Attribute *rec, int slotNum) {
   return SUCCESS;
 }
 
+int RecBuffer:: getSlotMap(unsigned char*slotMap)
+{
+  unsigned char*bufferPtr;
+
+  int ret=loadBlockAndGetBufferPtr(&bufferPtr);
+  if(ret!=SUCCESS)
+  {
+    return ret;
+  }
+
+  struct HeadInfo head;
+
+  this->getHeader(&head);
+  int slotCount=head.numSlots;
+  unsigned char*slotMapInBuffer=bufferPtr+HEADER_SIZE;
+  
+  for(int slot=0;slot<slotCount;slot++)
+  {
+    slotMap[slot]=slotMapInBuffer[slot];
+  }
+  return SUCCESS;
+}
+
+int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType) {
+
+    
+    double diff;
+     if (attrType == STRING)
+       diff = strcmp(attr1.sVal, attr2.sVal);
+     else
+        diff = attr1.nVal - attr2.nVal;
+
+    
+    if (diff > 0)  return 1;
+   else if (diff < 0)  return -1;
+    else
+    {  
+      return 0;
+    }
+    
+}
+
 /*
 Used to load a block to the buffer and get a pointer to it.
 NOTE: this function expects the caller to allocate memory for the argument
 */
 
-
 int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr) {
-  // check whether the block is already present in the buffer using StaticBuffer.getBufferNum()
-  int bufferNum = StaticBuffer::getBufferNum(this->blockNum);
 
-  if (bufferNum == E_BLOCKNOTINBUFFER) {
-    bufferNum = StaticBuffer::getFreeBuffer(this->blockNum);
+    // check whether the block is already present in the buffer
+    int bufferNum = StaticBuffer::getBufferNum(this->blockNum);
 
-    if (bufferNum == E_OUTOFBOUND) {
-      return E_OUTOFBOUND;
+    if (bufferNum != E_BLOCKNOTINBUFFER) {
+        // set the timestamp of the corresponding buffer to 0 and increment
+        // the timestamps of all other occupied buffers
+        for (int bufferIndex = 0; bufferIndex < BUFFER_CAPACITY; bufferIndex++) {
+            if (StaticBuffer::metainfo[bufferIndex].free == false) {
+                if (bufferIndex == bufferNum) {
+                    StaticBuffer::metainfo[bufferIndex].timeStamp = 0;
+                } else {
+                    StaticBuffer::metainfo[bufferIndex].timeStamp++;
+                }
+            }
+        }
+    } else {
+        // get a free buffer using StaticBuffer::getFreeBuffer()
+        bufferNum = StaticBuffer::getFreeBuffer(this->blockNum);
+
+        // if the call returns E_OUTOFBOUND, the blockNum is invalid
+        if (bufferNum == E_OUTOFBOUND) {
+            return E_OUTOFBOUND;
+        }
+
+        // Read the block into the free buffer
+        Disk::readBlock(StaticBuffer::blocks[bufferNum], this->blockNum);
     }
 
-    Disk::readBlock(StaticBuffer::blocks[bufferNum], this->blockNum);
-  }
+    // store the pointer to this buffer in *buffPtr
+    *buffPtr = StaticBuffer::blocks[bufferNum];
 
-  // store the pointer to this buffer (blocks[bufferNum]) in *buffPtr
-  *buffPtr = StaticBuffer::blocks[bufferNum];
-
-  return SUCCESS;
+    return SUCCESS;
 }
-
-
