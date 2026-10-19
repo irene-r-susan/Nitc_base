@@ -1,5 +1,5 @@
 #include "AttrCacheTable.h"
-
+#include<iostream>
 #include <cstring>
 
 AttrCacheEntry* AttrCacheTable::attrCache[MAX_OPEN];
@@ -22,6 +22,7 @@ int AttrCacheTable::getAttrCatEntry(
 
     // check if relation is open
     if (attrCache[relId] == nullptr) {
+       
         return E_RELNOTOPEN;
     }
 
@@ -40,6 +41,7 @@ int AttrCacheTable::getAttrCatEntry(
     }
 
     // there is no attribute at this offset
+    
     return E_ATTRNOTEXIST;
 }
 
@@ -69,4 +71,38 @@ void AttrCacheTable::recordToAttrCatEntry(
 
     attrCatEntry->offset =
         (int)record[ATTRCAT_OFFSET_INDEX].nVal;
+
+    
 }
+
+/* returns the attribute with name `attrName` for the relation corresponding to relId
+NOTE: this function expects the caller to allocate memory for `*attrCatBuf`
+*/
+int AttrCacheTable::getAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCatEntry* attrCatBuf) {
+
+  // check that relId is valid and corresponds to an open relation
+
+  // iterate over the entries in the attribute cache and set attrCatBuf to the entry that
+  //    matches attrName
+
+  // no attribute with name attrName for the relation
+    if(relId<0||relId>=MAX_OPEN)
+    return E_OUTOFBOUND;
+
+    if(attrCache[relId]==nullptr)
+    {
+        
+    return E_RELNOTOPEN;
+    }
+    for(AttrCacheEntry* entry=attrCache[relId];entry!=nullptr;entry=entry->next)
+    {
+        if(strcmp(entry->attrCatEntry.attrName,attrName)==0)
+        {
+            *attrCatBuf=entry->attrCatEntry;
+            return SUCCESS;
+        }
+    }
+
+  return E_ATTRNOTEXIST;
+}
+
