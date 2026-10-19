@@ -187,6 +187,7 @@ int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr) {
 
     // store the pointer to this buffer in *buffPtr
     *buffPtr = StaticBuffer::blocks[bufferNum];
+<<<<<<< HEAD
 
     return SUCCESS;
 }
@@ -225,5 +226,8 @@ int RecBuffer::setRecord(union Attribute *rec, int slotNum) {
     // 6. Mark the buffer frame as modified/dirty
     StaticBuffer::setDirtyBit(this->blockNum);
 
+=======
+
+>>>>>>> 0c12dd2ef97e015416086ba0354a08ea78f21dfd
     return SUCCESS;
 }
